@@ -24,6 +24,13 @@ function init(option) {
     }
 
     /**
+     * 导出选项
+     */
+    Zone.prototype.toOption = function () {
+        return this.points.map(p => p.toOption())
+    }
+
+    /**
      * 取消悬停
      */
     Zone.prototype.unhover = function () {
@@ -173,6 +180,13 @@ function init(option) {
     }
 
     /**
+     * 导出选项
+     */
+    Point.prototype.toOption = function () {
+        return [this.x, this.y]
+    }
+
+    /**
      * 画点
      */
     Point.prototype.draw = function () {
@@ -291,6 +305,13 @@ function init(option) {
             }
         }
         return false
+    }
+
+    /**
+     * 导出选项
+     */
+    Editor.prototype.toOption = function () {
+        return this.zones.map(z => z.toOption())
     }
 
     /**
