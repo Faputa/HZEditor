@@ -20,28 +20,22 @@ function init(option) {
         if (this.points < 3) {
             this.closed = false
         }
-        this.resetStyle()
+        this.hovered = false
     }
 
     /**
-     * 重置样式
+     * 取消悬停
      */
-    Zone.prototype.resetStyle = function () {
-        if (this.checkCrossing()) {
-            this.strokeStyle = '#ff0000'
-        } else {
-            this.strokeStyle = '#0000ff'
-        }
-        this.fillStyle = '#c8d0d275'
-        this.points.forEach(p => p.resetStyle())
+    Zone.prototype.unhover = function () {
+        this.hovered = false
+        this.points.forEach(p => p.unhover())
     }
 
     /**
      * 悬停
      */
     Zone.prototype.hover = function () {
-        canvas.style.cursor = 'pointer'
-        this.strokeStyle = '#7a7bef'
+        this.hovered = true
         this.points.forEach(p => p.hover())
     }
 
@@ -51,7 +45,6 @@ function init(option) {
      * @param {Number} y 纵向偏移量
      */
     Zone.prototype.move = function (x, y) {
-        canvas.style.cursor = 'move'
         this.points.forEach(p => p.move(x, y))
     }
 
@@ -59,6 +52,12 @@ function init(option) {
      * 画热区
      */
     Zone.prototype.draw = function () {
+        // 设置样式
+        let fillStyle = '#c8d0d275'
+        let strokeStyle = this.checkCrossing() ? '#ff0000' :
+            this.hovered ? '#7a7bef' :
+                '#0000ff'
+        // 开始绘图
         ctx.save()
         // 画点
         this.points.forEach(p => p.draw())
@@ -75,10 +74,10 @@ function init(option) {
             // 闭合路径
             ctx.closePath()
             // 填充
-            ctx.fillStyle = this.fillStyle
+            ctx.fillStyle = fillStyle
             ctx.fill()
         }
-        ctx.strokeStyle = this.strokeStyle
+        ctx.strokeStyle = strokeStyle
         ctx.stroke()
         ctx.restore()
     }
@@ -146,23 +145,21 @@ function init(option) {
         this.x = option[0]
         this.y = option[1]
         this.r = 5
-        this.resetStyle()
+        this.hovered = false
     }
 
     /**
-     * 重置样式
+     * 取消悬停
      */
-    Point.prototype.resetStyle = function () {
-        this.strokeStyle = '#ff0000'
-        this.lineWidth = 2
+    Point.prototype.unhover = function () {
+        this.hovered = false
     }
 
     /**
      * 悬停
      */
     Point.prototype.hover = function () {
-        canvas.style.cursor = 'pointer'
-        this.strokeStyle = '#7a7bef'
+        this.hovered = true
     }
 
     /**
@@ -171,7 +168,6 @@ function init(option) {
      * @param {Number} y 纵向偏移量
      */
     Point.prototype.move = function (x, y) {
-        canvas.style.cursor = 'move'
         this.x += x
         this.y += y
     }
@@ -180,11 +176,16 @@ function init(option) {
      * 画点
      */
     Point.prototype.draw = function () {
+        // 设置样式
+        let strokeStyle = this.hovered ? '#7a7bef' :
+            '#ff0000'
+        let lineWidth = 2
+        // 开始绘图
         ctx.save()
         ctx.beginPath()
         ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2)
-        ctx.strokeStyle = this.strokeStyle
-        ctx.lineWidth = 2
+        ctx.strokeStyle = strokeStyle
+        ctx.lineWidth = lineWidth
         ctx.stroke()
         ctx.restore()
     }
@@ -293,11 +294,11 @@ function init(option) {
     }
 
     /**
-     * 重置样式
+     * 取消悬停
      */
-    Editor.prototype.resetStyle = function () {
+    Editor.prototype.unhover = function () {
         canvas.style.cursor = ''
-        this.zones.forEach(z => z.resetStyle())
+        this.zones.forEach(z => z.unhover())
     }
 
     /**
@@ -306,9 +307,10 @@ function init(option) {
      * @param {Number} y 纵坐标
      */
     Editor.prototype.hover = function (x, y) {
-        this.resetStyle()
+        this.unhover()
         let zone = this.getSelectedZone(x, y)
         if (zone) {
+            canvas.style.cursor = 'pointer'
             let point = this.getSelectedPoint(x, y, zone.points)
             if (point) {
                 point.hover()
@@ -328,6 +330,7 @@ function init(option) {
             this.selectedZone = this.getSelectedZone(x, y)
         }
         if (this.selectedZone) {
+            canvas.style.cursor = 'move'
             if (!this.selectedPoint) {
                 this.selectedPoint = this.getSelectedPoint(x, y, this.selectedZone.points)
             }
