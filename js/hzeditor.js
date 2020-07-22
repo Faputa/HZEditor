@@ -149,7 +149,9 @@ function init(option) {
      * @param {Array} option 坐标数组
      */
     function Point(option) {
+        /** @type {Number} */
         this.x = option[0]
+        /** @type {Number} */
         this.y = option[1]
         this.r = 5
         this.hovered = false
@@ -222,6 +224,10 @@ function init(option) {
         return false
     }
 
+    /**
+     * 编辑器
+     * @param {Array} option 选项数组
+     */
     function Editor(option) {
         /** @type {[Zone]} */
         this.zones = option.map(i => new Zone(i))
@@ -231,6 +237,32 @@ function init(option) {
         this.focusPoint = null
         /** @type {Zone} */
         this.focusZone = null
+    }
+
+    /**
+     * 导出选项
+     */
+    Editor.prototype.toOption = function () {
+        return this.zones.map(z => z.toOption())
+    }
+
+    /**
+     * 新建热区
+     */
+    Editor.prototype.addZone = function () {
+        this.zones.push(new Zone([
+            [10, 10],
+            [110, 10],
+            [110, 110],
+            [10, 110]
+        ]))
+    }
+
+    /**
+     * 删除所有热区
+     */
+    Editor.prototype.removeAll = function () {
+        this.zones = []
     }
 
     /**
@@ -279,9 +311,10 @@ function init(option) {
      */
     Editor.prototype.deleteZone = function (zone) {
         for (let i = 0; i < this.zones.length; i++) {
-            if (zone === this.zones[i])
+            if (zone === this.zones[i]) {
                 this.zones.splice(i, 1)
-            return true
+                return true
+            }
         }
         return false
     }
@@ -301,13 +334,6 @@ function init(option) {
             }
         }
         return false
-    }
-
-    /**
-     * 导出选项
-     */
-    Editor.prototype.toOption = function () {
-        return this.zones.map(z => z.toOption())
     }
 
     /**
