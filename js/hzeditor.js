@@ -228,11 +228,7 @@ function init(option) {
         this.ismousedown = false
         this.mousebegin = { x: 0, y: 0 }
         /** @type {Point} */
-        this.selectedPoint = null
-        /** @type {Point} */
         this.focusPoint = null
-        /** @type {Zone} */
-        this.selectedZone = null
         /** @type {Zone} */
         this.focusZone = null
     }
@@ -244,7 +240,7 @@ function init(option) {
      * @param {boolean} unshift 是否将选中热区移动到队列开头
      * @returns {Zone}
      */
-    Editor.prototype.getSelectedZone = function (x, y, unshift) {
+    Editor.prototype.selectedZone = function (x, y, unshift) {
         for (let i = 0; i < this.zones.length; i++) {
             let zone = this.zones[i]
             if (zone.isSelected(x, y)) {
@@ -266,7 +262,7 @@ function init(option) {
      * @param {Number} y 纵坐标
      * @returns {Point}
      */
-    Editor.prototype.getSelectedPoint = function (x, y, points) {
+    Editor.prototype.selectedPoint = function (x, y, points) {
         points = points || this.zones.reduce((a, b) => a.concat(b.points), [])
         for (let point of points) {
             if (point.isSelected(x, y)) {
@@ -329,10 +325,10 @@ function init(option) {
      */
     Editor.prototype.hover = function (x, y) {
         this.unhover()
-        let zone = this.getSelectedZone(x, y)
+        let zone = this.selectedZone(x, y)
         if (zone) {
             canvas.style.cursor = 'pointer'
-            let point = this.getSelectedPoint(x, y, zone.points)
+            let point = this.selectedPoint(x, y, zone.points)
             if (point) {
                 point.hover()
                 return
@@ -347,19 +343,19 @@ function init(option) {
      * @param {Number} y 纵坐标
      */
     Editor.prototype.move = function (x, y) {
-        if (!this.selectedZone) {
-            this.selectedZone = this.getSelectedZone(x, y)
+        if (!this.focusZone) {
+            this.focusZone = this.selectedZone(x, y)
         }
-        if (this.selectedZone) {
+        if (this.focusZone) {
             canvas.style.cursor = 'move'
-            if (!this.selectedPoint) {
-                this.selectedPoint = this.getSelectedPoint(x, y, this.selectedZone.points)
+            if (!this.focusPoint) {
+                this.focusPoint = this.selectedPoint(x, y, this.focusZone.points)
             }
-            if (this.selectedPoint) {
-                this.selectedPoint.move(x - this.mousebegin.x, y - this.mousebegin.y)
+            if (this.focusPoint) {
+                this.focusPoint.move(x - this.mousebegin.x, y - this.mousebegin.y)
                 return
             }
-            this.selectedZone.move(x - this.mousebegin.x, y - this.mousebegin.y)
+            this.focusZone.move(x - this.mousebegin.x, y - this.mousebegin.y)
         }
     }
 
@@ -398,14 +394,10 @@ function init(option) {
      */
     Editor.prototype.mousedown = function (e) {
         let [x, y] = [e.offsetX, e.offsetY]
-        this.focusZone = null
-        this.selectedPoint = null
-        this.selectedZone = this.getSelectedZone(x, y, true)
-        this.focusZone = this.selectedZone
-        if (this.selectedZone) {
+        this.focusZone = this.selectedZone(x, y, true)
+        if (this.focusZone) {
             canvas.style.cursor = 'move'
-            this.selectedPoint = this.getSelectedPoint(x, y, this.selectedZone.points)
-            this.focusPoint = this.selectedPoint
+            this.focusPoint = this.selectedPoint(x, y, this.focusZone.points)
         }
         this.mousebegin = { x, y }
         this.ismousedown = true
@@ -454,8 +446,6 @@ function init(option) {
         canvas.style.cursor = ''
         this.ismousedown = false
         this.mousebegin = { x: 0, y: 0 }
-        this.selectedPoint = null
-        this.selectedZone = null
     }
 
     /**
@@ -465,10 +455,9 @@ function init(option) {
     Editor.prototype.dblclick = function (e) {
         canvas.style.cursor = 'pointer'
         let [x, y] = [e.offsetX, e.offsetY]
-        let point = this.getSelectedPoint(x, y)
+        let point = this.selectedPoint(x, y)
         if (point) {
             this.deletePoint(point)
-            this.selectedPoint = null
             this.focusPoint = null
             return
         }
