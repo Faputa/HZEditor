@@ -1,4 +1,4 @@
-function init(option) {
+function init(option = []) {
     /** @type {HTMLCanvasElement} */
     let canvas = document.getElementById('canvas')
     if (!canvas.getContext) {
@@ -60,8 +60,9 @@ function init(option) {
      */
     Zone.prototype.draw = function () {
         // 设置样式
+        let hasError = this.isDistortion() || this.isOutOfBound()
         let fillStyle = '#c8d0d275'
-        let strokeStyle = this.checkCrossing() ? '#ff0000' :
+        let strokeStyle = hasError ? '#ff0000' :
             this.hovered ? '#7a7bef' :
                 '#0000ff'
         // 开始绘图
@@ -118,17 +119,17 @@ function init(option) {
     }
 
     /**
-     * 检查热区是否扭曲交叉
+     * 热区是否扭曲交叉
      * @returns {boolean} false否true是
      */
-    Zone.prototype.checkCrossing = function () {
+    Zone.prototype.isDistortion = function () {
         for (let i = 0; i < this.points.length; i++) {
             let p1 = this.points[i]
             let p2 = this.points[(i + 1) % this.points.length]
             for (let j = i; j < this.points.length; j++) {
                 let q1 = this.points[j]
                 let q2 = this.points[(j + 1) % this.points.length]
-                let cc = checkCrossing2(p1, p2, q1, q2)
+                let cc = isCrossing2(p1, p2, q1, q2)
                 if ((j + 1) % this.points.length === i ||
                     (i + 1) % this.points.length === j) {
                     if (cc === 2) {
@@ -142,6 +143,48 @@ function init(option) {
             }
         }
         return false
+    }
+
+    /**
+     * 热区是否超出界限
+     * @returns {boolean} false否true是
+     */
+    Zone.prototype.isOutOfBound = function () {
+        for (let point of this.points) {
+            if (point.isOutOfBound()) {
+                return true
+            }
+        }
+        return false
+    }
+
+    /**
+     * 超出界限时调整热区位置
+     */
+    Zone.prototype.adjustIfOutOfBound = function () {
+        let x = 0
+        let y = 0
+        this.points.forEach(p => {
+            let _x = 0
+            let _y = 0
+            if (p.x < 0) {
+                _x = 0 - p.x
+            } else if (p.x > canvas.width) {
+                _x = canvas.width - p.x
+            }
+            if (p.y < 0) {
+                _y = 0 - p.y
+            } else if (p.y > canvas.height) {
+                _y = canvas.height - p.y
+            }
+            if (Math.abs(x) < Math.abs(_x)) {
+                x = _x
+            }
+            if (Math.abs(y) < Math.abs(_y)) {
+                y = _y
+            }
+        })
+        this.points.forEach(p => p.move(x, y))
     }
 
     /**
@@ -225,10 +268,37 @@ function init(option) {
     }
 
     /**
+     * 点是否超出界限
+     * @returns {boolean} false否true是
+     */
+    Point.prototype.isOutOfBound = function () {
+        return !(
+            0 <= this.x && this.x <= canvas.width &&
+            0 <= this.y && this.y <= canvas.height
+        )
+    }
+
+    /**
+     * 超出界限时调整点位置
+     */
+    Point.prototype.adjustIfOutOfBound = function () {
+        if (this.x < 0) {
+            this.x = 0
+        } else if (this.x > canvas.width) {
+            this.x = canvas.width
+        }
+        if (this.y < 0) {
+            this.y = 0
+        } else if (this.y > canvas.height) {
+            this.y = canvas.height
+        }
+    }
+
+    /**
      * 编辑器
      * @param {Array} option 选项数组
      */
-    function Editor(option) {
+    function Editor(option = []) {
         /** @type {[Zone]} */
         this.zones = option.map(i => new Zone(i))
         this.ismousedown = false
@@ -237,6 +307,8 @@ function init(option) {
         this.focusPoint = null
         /** @type {Zone} */
         this.focusZone = null
+        // 导出canvas
+        this.canvas = canvas
     }
 
     /**
@@ -250,7 +322,7 @@ function init(option) {
      * 新建热区
      */
     Editor.prototype.addZone = function () {
-        this.zones.push(new Zone([
+        this.zones.unshift(new Zone([
             [10, 10],
             [110, 10],
             [110, 110],
@@ -259,10 +331,10 @@ function init(option) {
     }
 
     /**
-     * 删除所有热区
+     * 重置编辑器
      */
-    Editor.prototype.removeAll = function () {
-        this.zones = []
+    Editor.prototype.reset = function (option = []) {
+        this.zones = option.map(i => new Zone(i))
     }
 
     /**
@@ -379,9 +451,11 @@ function init(option) {
             }
             if (this.focusPoint) {
                 this.focusPoint.move(x - this.mousebegin.x, y - this.mousebegin.y)
+                this.focusPoint.adjustIfOutOfBound()
                 return
             }
             this.focusZone.move(x - this.mousebegin.x, y - this.mousebegin.y)
+            this.focusZone.adjustIfOutOfBound()
         }
     }
 
@@ -419,7 +493,7 @@ function init(option) {
      * @param {MouseEvent} e 
      */
     Editor.prototype.mousedown = function (e) {
-        let [x, y] = [e.offsetX, e.offsetY]
+        let { x, y } = offsetXY(e)
         this.focusZone = this.selectedZone(x, y, true)
         if (this.focusZone) {
             canvas.style.cursor = 'move'
@@ -434,7 +508,7 @@ function init(option) {
      * @param {MouseEvent} e 
      */
     Editor.prototype.mousemove = function (e) {
-        let [x, y] = [e.offsetX, e.offsetY]
+        let { x, y } = offsetXY(e)
         this.hover(x, y)
         if (this.ismousedown) {
             this.move(x, y)
@@ -480,7 +554,7 @@ function init(option) {
      */
     Editor.prototype.dblclick = function (e) {
         canvas.style.cursor = 'pointer'
-        let [x, y] = [e.offsetX, e.offsetY]
+        let { x, y } = offsetXY(e)
         let point = this.selectedPoint(x, y)
         if (point) {
             this.deletePoint(point)
@@ -509,12 +583,13 @@ function init(option) {
     let editor = new Editor(option)
     editor.draw()
 
-    canvas.addEventListener('mousemove', editor.mousemove.bind(editor))
     canvas.addEventListener('mousedown', editor.mousedown.bind(editor))
     canvas.addEventListener('keydown', editor.keydown.bind(editor))
+    canvas.addEventListener('dblclick', editor.dblclick.bind(editor))
     // 注意：mouseup事件应该注册到window上
     window.addEventListener('mouseup', editor.mouseup.bind(editor))
-    canvas.addEventListener('dblclick', editor.dblclick.bind(editor))
+    // mousemove注册到window上体验更好
+    window.addEventListener('mousemove', editor.mousemove.bind(editor))
 
     return editor
 
@@ -526,7 +601,7 @@ function init(option) {
      * @param {Point} q2 线段q终点
      * @returns 0相离1相交2重合3一点重合
      */
-    function checkCrossing(p1, p2, q1, q2) {
+    function isCrossing(p1, p2, q1, q2) {
         // 向量p1→p2
         let [x0, y0] = [p2.x - p1.x, p2.y - p1.y]
         // 向量p1→q1
@@ -557,9 +632,9 @@ function init(option) {
      * @param {Point} q2 线段q的终点
      * @returns 0相离1相交2重合3一点重合
      */
-    function checkCrossing2(p1, p2, q1, q2) {
-        let cc1 = checkCrossing(p1, p2, q1, q2)
-        let cc2 = checkCrossing(q1, q2, p1, p2)
+    function isCrossing2(p1, p2, q1, q2) {
+        let cc1 = isCrossing(p1, p2, q1, q2)
+        let cc2 = isCrossing(q1, q2, p1, p2)
         if (cc1 === 0 || cc2 === 0) {
             return 0
         }
@@ -582,5 +657,17 @@ function init(option) {
         if (a === b + c) {
             return 3
         }
+    }
+
+    /**
+     * 获取鼠标相对canvas的偏移量
+     * @param {MouseEvent} e 
+     * @returns {{x:Number,y:Number}}
+     */
+    function offsetXY(e) {
+        // 鼠标相对于窗口的位置减去元素相对于窗口的位置
+        let x = e.clientX - canvas.getBoundingClientRect().left
+        let y = e.clientY - canvas.getBoundingClientRect().top
+        return { x, y }
     }
 }
