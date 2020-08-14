@@ -11,6 +11,7 @@ function init(option = []) {
 
     /**
      * 热区
+     * @constructor
      * @param {Array} option 选项数组
      * @param {boolean} closed 是否闭合
      */
@@ -48,8 +49,8 @@ function init(option = []) {
 
     /**
      * 移动热区
-     * @param {Number} x 横向偏移量
-     * @param {Number} y 纵向偏移量
+     * @param {number} x 横向偏移量
+     * @param {number} y 纵向偏移量
      */
     Zone.prototype.move = function (x, y) {
         this.points.forEach(p => p.move(x, y))
@@ -92,8 +93,8 @@ function init(option = []) {
 
     /**
      * 是否被选中
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      */
     Zone.prototype.isSelected = function (x, y) {
         for (let point of this.points) {
@@ -189,12 +190,13 @@ function init(option = []) {
 
     /**
      * 点
+     * @constructor
      * @param {Array} option 坐标数组
      */
     function Point(option) {
-        /** @type {Number} */
+        /** @type {number} */
         this.x = option[0]
-        /** @type {Number} */
+        /** @type {number} */
         this.y = option[1]
         this.r = 5
         this.hovered = false
@@ -216,8 +218,8 @@ function init(option = []) {
 
     /**
      * 移动点
-     * @param {Number} x 横向偏移量
-     * @param {Number} y 纵向偏移量
+     * @param {number} x 横向偏移量
+     * @param {number} y 纵向偏移量
      */
     Point.prototype.move = function (x, y) {
         this.x += x
@@ -251,8 +253,8 @@ function init(option = []) {
 
     /**
      * 是否被选中
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      */
     Point.prototype.isSelected = function (x, y) {
         ctx.save()
@@ -296,6 +298,7 @@ function init(option = []) {
 
     /**
      * 编辑器
+     * @constructor
      * @param {Array} option 选项数组
      */
     function Editor(option = []) {
@@ -339,8 +342,8 @@ function init(option = []) {
 
     /**
      * 被选中的热区
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      * @param {boolean} unshift 是否将选中热区移动到队列开头
      * @returns {Zone}
      */
@@ -362,8 +365,8 @@ function init(option = []) {
     /**
      * 被选中的点
      * @param {[Point]} points 点数组
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      * @returns {Point}
      */
     Editor.prototype.selectedPoint = function (x, y, points) {
@@ -418,8 +421,8 @@ function init(option = []) {
 
     /**
      * 悬停
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      */
     Editor.prototype.hover = function (x, y) {
         this.unhover()
@@ -437,18 +440,12 @@ function init(option = []) {
 
     /**
      * 移动
-     * @param {Number} x 横坐标
-     * @param {Number} y 纵坐标
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      */
     Editor.prototype.move = function (x, y) {
-        if (!this.focusZone) {
-            this.focusZone = this.selectedZone(x, y)
-        }
         if (this.focusZone) {
             canvas.style.cursor = 'move'
-            if (!this.focusPoint) {
-                this.focusPoint = this.selectedPoint(x, y, this.focusZone.points)
-            }
             if (this.focusPoint) {
                 this.focusPoint.move(x - this.mousebegin.x, y - this.mousebegin.y)
                 this.focusPoint.adjustIfOutOfBound()
@@ -496,7 +493,6 @@ function init(option = []) {
         let { x, y } = offsetXY(e)
         this.focusZone = this.selectedZone(x, y, true)
         if (this.focusZone) {
-            canvas.style.cursor = 'move'
             this.focusPoint = this.selectedPoint(x, y, this.focusZone.points)
         }
         this.mousebegin = { x, y }
@@ -543,7 +539,6 @@ function init(option = []) {
      * @param {MouseEvent} e 
      */
     Editor.prototype.mouseup = function (e) {
-        canvas.style.cursor = ''
         this.ismousedown = false
         this.mousebegin = { x: 0, y: 0 }
     }
@@ -553,7 +548,6 @@ function init(option = []) {
      * @param {MouseEvent} e 
      */
     Editor.prototype.dblclick = function (e) {
-        canvas.style.cursor = 'pointer'
         let { x, y } = offsetXY(e)
         let point = this.selectedPoint(x, y)
         if (point) {
@@ -573,6 +567,7 @@ function init(option = []) {
                 if (ctx.isPointInStroke(x, y)) {
                     ctx.restore()
                     zone.points.splice(i + 1, 0, new Point([x, y]))
+                    canvas.style.cursor = 'pointer'
                     return
                 }
                 ctx.restore()
@@ -662,7 +657,7 @@ function init(option = []) {
     /**
      * 获取鼠标相对canvas的偏移量
      * @param {MouseEvent} e 
-     * @returns {{x:Number,y:Number}}
+     * @returns {{x:number,y:number}}
      */
     function offsetXY(e) {
         // 鼠标相对于窗口的位置减去元素相对于窗口的位置
