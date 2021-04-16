@@ -1,41 +1,41 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset='utf-8'>
-    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>热区编辑器</title>
-    <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <link rel='stylesheet' type='text/css' media='screen' href='css/hzeditor.css'>
-    <link rel="stylesheet" href="css/index.css">
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <title>热区编辑器</title>
+  <meta name='viewport' content='width=device-width, initial-scale=1'>
+  <link rel='stylesheet' type='text/css' media='screen' href='css/hzeditor.css'>
+  <link rel="stylesheet" href="css/index.css">
 </head>
 <body>
-    <canvas id="canvas" width="1000" height="600">浏览器不支持canvas</canvas>
-    <button id="addZone">添加热区</button>
-    <button id="save">保存</button></button>
-    <button id="removeAll">清空</button></button>
-    <script src='js/hzeditor.js'></script>
-    <script>
-        let editor = init([
-            [
-                [100, 100],
-                [100, 200],
-                [200, 300],
-                [400, 500],
-                [500, 450]
-            ],
-            [
-                [300, 100],
-                [300, 200],
-                [500, 300],
-                [700, 500],
-                [900, 550]
-            ]
-        ])
-        if (editor) {
-            document.getElementById('addZone').addEventListener('click', e => editor.addZone())
-            document.getElementById('save').addEventListener('click', e => alert(JSON.stringify(editor.toOption())))
-            document.getElementById('removeAll').addEventListener('click', e => editor.reset())
-        }
-    </script>
+  <canvas id="canvas" width="1000" height="600">浏览器不支持canvas</canvas>
+  <button id="append">添加热区</button>
+  <button id="save">保存</button></button>
+  <button id="removeAll">清空</button></button>
+  <script src='js/hzeditor.js'></script>
+  <script>
+    let editor = hzeditor(document.getElementById('canvas'), [
+      [
+        [100, 100],
+        [100, 200],
+        [200, 300],
+        [400, 500],
+        [500, 450]
+      ],
+      [
+        [300, 100],
+        [300, 200],
+        [500, 300],
+        [700, 500],
+        [900, 550]
+      ]
+    ])
+    if (editor) {
+      document.getElementById('append').addEventListener('click', e => editor.append())
+      document.getElementById('save').addEventListener('click', e => alert(JSON.stringify(editor.toOption())))
+      document.getElementById('removeAll').addEventListener('click', e => editor.setOption())
+    }
+  </script>
 </body>
 </html>
