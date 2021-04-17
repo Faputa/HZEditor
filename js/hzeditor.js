@@ -695,7 +695,7 @@
   }
 
   if (typeof define === "function" && define.amd) {
-    define(() => {
+    define(function () {
       return hzeditor;
     });
   } else if (typeof exports === "object") {
