@@ -354,10 +354,8 @@
         y === z.topLeft().toOption()[1]
       ), false)
       for (let i = 0; i < this.zones.length && check(); i++) {
-        [x, y] = [
-          (x + delta) % (canvas.width - padding),
-          (y + delta) % (canvas.height - padding)
-        ]
+        x = (x + delta) % (canvas.width - padding)
+        y = (y + delta) % (canvas.height - padding)
       }
       this.zones.unshift(new Zone([
         [x, y],
