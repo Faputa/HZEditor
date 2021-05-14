@@ -49,15 +49,22 @@
      * 取消悬停
      */
     Zone.prototype.unhover = function () {
+      this.edgeHovered = false
       this.hovered = false
       this.points.forEach(p => p.unhover())
     }
 
     /**
      * 悬停
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
      */
-    Zone.prototype.hover = function () {
-      this.hovered = true
+    Zone.prototype.hover = function (x, y) {
+      if (this.isSelectedEdge(x, y)) {
+        this.edgeHovered = true
+      } else {
+        this.hovered = true
+      }
       this.points.forEach(p => p.hover())
     }
 
@@ -77,9 +84,10 @@
       // 设置样式
       let hasError = this.isDistortion() || this.isOutOfBound()
       let fillStyle = '#c8d0d275'
-      let strokeStyle = hasError ? '#ff0000' :
-        this.hovered ? '#7a7bef' :
-          '#0000ff'
+      let strokeStyle = hasError && '#ff0000' ||
+        this.edgeHovered && '#00ff00' ||
+        this.hovered && '#7a7bef' ||
+        '#0000ff'
       // 开始绘图
       ctx.save()
       // 画点
@@ -116,6 +124,9 @@
           return true
         }
       }
+      if (this.isSelectedEdge(x, y)) {
+        return true
+      }
       ctx.save()
       ctx.beginPath()
       this.points.forEach((a, b) => {
@@ -130,6 +141,29 @@
         return true
       }
       ctx.restore()
+      return false
+    }
+
+    /**
+     * 是否被选中边缘
+     * @param {number} x 横坐标
+     * @param {number} y 纵坐标
+     */
+    Zone.prototype.isSelectedEdge = function (x, y) {
+      for (let i = 0; i < this.points.length; i++) {
+        let p1 = this.points[i]
+        let p2 = this.points[(i + 1) % this.points.length]
+        ctx.save()
+        ctx.beginPath()
+        ctx.moveTo(p1.x, p1.y)
+        ctx.lineTo(p2.x, p2.y)
+        ctx.lineWidth = 5
+        if (ctx.isPointInStroke(x, y)) {
+          ctx.restore()
+          return true
+        }
+        ctx.restore()
+      }
       return false
     }
 
@@ -459,7 +493,7 @@
           point.hover()
           return
         }
-        zone.hover()
+        zone.hover(x, y)
       }
     }
 
@@ -530,9 +564,10 @@
      */
     Editor.prototype.mousemove = function (e) {
       let { x, y } = offsetXY(e)
-      this.hover(x, y)
       if (this.ismousedown) {
         this.move(x, y)
+      } else {
+        this.hover(x, y)
       }
       this.mousebegin = { x, y }
     }
