@@ -1,19 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <meta charset='utf-8'>
-  <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <title>热区编辑器</title>
-  <meta name='viewport' content='width=device-width, initial-scale=1'>
-  <link rel='stylesheet' type='text/css' media='screen' href='css/hzeditor.css'>
-  <link rel="stylesheet" href="css/index.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    html,
+    body {
+      user-select: none;
+      -moz-user-select: none;
+      -webkit-user-select: none;
+    }
+    #canvas {
+      display: block;
+      margin: 0 auto;
+      border: blue 1px solid;
+      background-repeat: no-repeat;
+      background-size: 100% 100%;
+    }
+    #canvas:focus {
+      outline: none;
+    }
+  </style>
 </head>
 <body>
-  <canvas id="canvas" width="1000" height="600">浏览器不支持canvas</canvas>
   <button id="append">添加热区</button>
   <button id="save">保存</button></button>
   <button id="removeAll">清空</button></button>
-  <script src='js/hzeditor.js'></script>
+  <canvas id="canvas" width="1000" height="600">浏览器不支持canvas</canvas>
+  <script src='hzeditor.js'></script>
   <script>
     let editor = hzeditor(document.getElementById('canvas'), [
       [
