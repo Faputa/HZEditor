@@ -178,7 +178,7 @@
         for (let j = i; j < this.points.length; j++) {
           let q1 = this.points[j]
           let q2 = this.points[(j + 1) % this.points.length]
-          let cc = isCrossing2(p1, p2, q1, q2)
+          let cc = checkSegmentAndSegment(p1, p2, q1, q2)
           if ((j + 1) % this.points.length === i ||
             (i + 1) % this.points.length === j) {
             if (cc === 2) {
@@ -661,16 +661,16 @@
      * @param {Point} q2 线段q终点
      * @returns 0相离1相交2重合3一点重合
      */
-    function isCrossing(p1, p2, q1, q2) {
-      // 向量p1→p2
+    function checkLineAndSegment(p1, p2, q1, q2) {
+      // 直线向量L
       let [x0, y0] = [p2.x - p1.x, p2.y - p1.y]
       // 向量p1→q1
       let [x1, y1] = [q1.x - p1.x, q1.y - p1.y]
       // 向量p1→q2
       let [x2, y2] = [q2.x - p1.x, q2.y - p1.y]
-      // 直线向量L和向量P0→P1的叉积
+      // 直线向量L和向量p1→q1的叉积
       let cp1 = x0 * y1 - x1 * y0
-      // 直线向量L和向量P0-P2的叉积
+      // 直线向量L和向量p1→q2的叉积
       let cp2 = x0 * y2 - x2 * y0
       if (cp1 * cp2 < 0) {
         return 1
@@ -692,29 +692,29 @@
      * @param {Point} q2 线段q的终点
      * @returns 0相离1相交2重合3一点重合
      */
-    function isCrossing2(p1, p2, q1, q2) {
-      let cc1 = isCrossing(p1, p2, q1, q2)
-      let cc2 = isCrossing(q1, q2, p1, p2)
+    function checkSegmentAndSegment(p1, p2, q1, q2) {
+      let cc1 = checkLineAndSegment(p1, p2, q1, q2)
+      let cc2 = checkLineAndSegment(q1, q2, p1, p2)
       if (cc1 === 0 || cc2 === 0) {
         return 0
       }
       if (cc1 === 1 && cc2 === 1) {
         return 1
       }
-      if (cc1 === 3 || cc2 === 3) {
+      if (cc1 === 2 || cc2 === 2) {
+        let [min, , , max] = [p1, p2, q1, q2].sort((a, b) => a.x - b.x || a.y - b.y)
+        let a = max.x - min.x || max.y - min.y
+        let b = Math.abs(p2.x - p1.x || p2.y - p1.y)
+        let c = Math.abs(q2.x - q1.x || q2.y - q1.y)
+        if (a > b + c) {
+          return 0
+        }
+        if (a < b + c) {
+          return 2
+        }
         return 3
       }
-      let [_p1, , , _p2] = [p1, p2, q1, q2].sort((a, b) => a.x - b.x || a.y - b.y)
-      let a = _p2.x - _p1.x || _p2.y - _p1.y
-      let b = Math.abs(p2.x - p1.x || p2.y - p1.y)
-      let c = Math.abs(q2.x - q1.x || q2.y - q1.y)
-      if (a > b + c) {
-        return 0
-      }
-      if (a < b + c) {
-        return 2
-      }
-      if (a === b + c) {
+      if (cc1 === 3 || cc2 === 3) {
         return 3
       }
     }
