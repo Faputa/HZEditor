@@ -519,6 +519,11 @@
      * 绘制canvas
      */
     Editor.prototype.draw = function () {
+      // https://stackoverflow.com/a/21696585/7391214
+      if (!ctx.canvas.offsetParent) {
+        window.requestAnimationFrame(this.draw.bind(this))
+        return
+      }
       // 清空画布
       ctx.clearRect(0, 0, canvas.width, canvas.height)
       // 绘制背景
